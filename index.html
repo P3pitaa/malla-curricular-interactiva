@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Malla Curricular Interactiva</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f9f9ff;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #creditos {
+      text-align: center;
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+    .ciclo {
+      margin-bottom: 40px;
+    }
+    .ciclo h2 {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+    }
+    .curso {
+      display: inline-block;
+      width: 200px;
+      margin: 8px;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+    .curso:hover {
+      transform: scale(1.03);
+    }
+    .bloqueado {
+      background: #fcdcdc;
+      color: #a00;
+      text-decoration: line-through;
+      position: relative;
+    }
+    .bloqueado::after {
+      content: "🔒";
+      position: absolute;
+      top: 8px;
+      right: 10px;
+    }
+    .pendiente {
+      background: #e9d5ff;
+      color: black;
+    }
+    .completado {
+      background: #c084fc;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Malla Curricular Interactiva</h1>
+  <div id="creditos">Créditos completados: <span id="creditos-count">0</span></div>
+  <div id="malla"></div>
+
+  <script>
+    const cursos = JSON.parse(localStorage.getItem('estadoCursos')) || {};
+    const data = [
+  { ciclo: 1, cursos: [
+    { id: "HU625", nombre: "Comprensión y Producción de Lenguaje I", creditos: 4 },
+    { id: "HU548", nombre: "Ética y Ciudadanía", creditos: 2 },
+    { id: "MA430", nombre: "Matemática Básica", creditos: 5 },
+    { id: "DS01", nombre: "Fundamentos del Diseño 1", creditos: 4 },
+    { id: "DS02", nombre: "Representación Visual 1", creditos: 4 }
+  ]},
+  { ciclo: 2, cursos: [
+    { id: "HU626", nombre: "Comprensión y Producción de Lenguaje II", creditos: 4, prereqs: ["HU625"] },
+    { id: "DS05", nombre: "Diseño y Antropología", creditos: 4 },
+    { id: "DS03", nombre: "Fundamentos del Diseño 2", creditos: 4, prereqs: ["DS01"] },
+    { id: "DS07", nombre: "Métodos de Diseño 1", creditos: 3, prereqs: ["HU625"] },
+    { id: "DS04", nombre: "Representación Visual 2", creditos: 4, prereqs: ["DS02"] },
+    { id: "DS06", nombre: "Signos y Códigos Visuales", creditos: 3 }
+  ]},
+  { ciclo: 3, cursos: [
+    { id: "DS10", nombre: "Creadores de Producto", creditos: 2, prereqs: ["DS05"] },
+    { id: "DS12", nombre: "Diseño, Arte y Estética 1", creditos: 4, prereqs: ["DS05"] },
+    { id: "DS11", nombre: "Antropometría y Ergonomía", creditos: 3, prereqs: ["DS07"] },
+    { id: "MA664", nombre: "Fenómenos Físicos Aplicados al Diseño", creditos: 3, prereqs: ["MA430"] },
+    { id: "DS08", nombre: "Laboratorio de Diseño Industrial 1", creditos: 6, prereqs: ["DS03"] },
+    { id: "DS09", nombre: "Visualización 3D y Prototipos", creditos: 3, prereqs: ["DS04"] }
+  ]},
+  { ciclo: 4, cursos: [
+    { id: "DS16", nombre: "Diseño, Arte y Estética 2", creditos: 4, prereqs: ["DS12"] },
+    { id: "DS52", nombre: "Ética en los Procesos de Diseño", creditos: 3, creditosMin: 54 },
+    { id: "DS13", nombre: "Laboratorio de Diseño Industrial 2", creditos: 6, prereqs: ["DS08"] },
+    { id: "DS14", nombre: "Materiales y sus Propiedades Sensoriales", creditos: 3, prereqs: ["MA664"] },
+    { id: "DS17", nombre: "Métodos de Diseño 2", creditos: 4, prereqs: ["DS07"] },
+    { id: "DS15", nombre: "Morfología y Biomecánica", creditos: 2, prereqs: ["DS11"] }
+  ]},
+  { ciclo: 5, cursos: [
+    { id: "DS23", nombre: "Diseño, Arte y Estética 3", creditos: 4, prereqs: ["DS16"] },
+    { id: "DS22", nombre: "Computational Thinking & Digital Fabrication 1", creditos: 2, prereqs: ["DS09"] },
+    { id: "DS18", nombre: "Laboratorio de Diseño Industrial 3", creditos: 6, prereqs: ["DS13"] },
+    { id: "DS19", nombre: "Microfabricación y Manufactura", creditos: 2, prereqs: ["DS14"] },
+    { id: "DS54", nombre: "Tecnología, Materiales y Herramientas", creditos: 3, prereqs: ["DS14"] }
+  ]},
+  { ciclo: 6, cursos: [
+    { id: "DS27", nombre: "Computational Thinking & Digital Fabrication 2", creditos: 2, prereqs: ["DS22"] },
+    { id: "DS29", nombre: "Decision Making & Data Driven Design", creditos: 4 },
+    { id: "DS25", nombre: "Laboratorio de Diseño Industrial 4", creditos: 6, prereqs: ["DS18"] }
+  ]},
+  { ciclo: 7, cursos: [
+    { id: "DS35", nombre: "Pensamiento Innovador", creditos: 2, prereqs: ["DS23"] },
+    { id: "DS33", nombre: "Electrónica para Prototipos", creditos: 2, prereqs: ["DS27"] },
+    { id: "DS34", nombre: "Investigación en Diseño Industrial 1", creditos: 4, prereqs: ["DS29"] },
+    { id: "DS31", nombre: "Laboratorio de Diseño Industrial 5", creditos: 6, prereqs: ["DS25"] },
+    { id: "DS32", nombre: "Objetos Inteligentes y Sensores", creditos: 2, prereqs: ["DS27"] }
+  ]},
+  { ciclo: 8, cursos: [
+    { id: "DS38", nombre: "Gestión del Diseño 1", creditos: 3, creditosMin: 90 },
+    { id: "DS39", nombre: "Introducción al Diseño de Accesorios Inteligentes", creditos: 3, prereqs: ["DS32"] },
+    { id: "DS40", nombre: "Investigación en Diseño Industrial 2", creditos: 4, prereqs: ["DS34"] },
+    { id: "DS37", nombre: "Laboratorio de Diseño Industrial 6", creditos: 6, prereqs: ["DS31"] },
+    { id: "DS41", nombre: "Periferia y Neoartesanía", creditos: 2, creditosMin: 100 }
+  ]},
+  { ciclo: 9, cursos: [
+    { id: "DS44", nombre: "Gestión del Diseño 2", creditos: 3, prereqs: ["DS38"] },
+    { id: "DS46", nombre: "Investigación en Diseño Industrial 3", creditos: 4, prereqs: ["DS40"] },
+    { id: "DS43", nombre: "Laboratorio de Diseño Industrial 7", creditos: 6, prereqs: ["DS37"] }
+  ]},
+  { ciclo: 10, cursos: [
+    { id: "DS48", nombre: "Curso de Trabajo de Investigación - Diseño y Ejercicio Profesional", creditos: 6, prereqs: ["DS43"] },
+    { id: "DS50", nombre: "Electrónica y Productos Interactivos", creditos: 2, prereqs: ["DS33"] },
+    { id: "DS49", nombre: "Gestión y Administración de Productos", creditos: 3, prereqs: ["DS44"] }
+  ]}
+];
+    function calcularCreditos() {
+      return Object.entries(cursos)
+        .filter(([_, estado]) => estado)
+        .reduce((acc, [id, _]) => {
+          for (let ciclo of data) {
+            for (let curso of ciclo.cursos) {
+              if (curso.id === id) return acc + curso.creditos;
+            }
+          }
+          return acc;
+        }, 0);
+    }
+
+    function guardarYRenderizar() {
+      localStorage.setItem('estadoCursos', JSON.stringify(cursos));
+      renderMalla();
+    }
+
+    function renderMalla() {
+      const contenedor = document.getElementById('malla');
+      const contador = document.getElementById('creditos-count');
+      contenedor.innerHTML = '';
+      const creditosActuales = calcularCreditos();
+      contador.textContent = creditosActuales;
+
+      data.forEach(bloque => {
+        const divCiclo = document.createElement('div');
+        divCiclo.className = 'ciclo';
+        const titulo = document.createElement('h2');
+        titulo.textContent = `Ciclo ${bloque.ciclo}`;
+        divCiclo.appendChild(titulo);
+
+        bloque.cursos.forEach(curso => {
+          const div = document.createElement('div');
+          div.className = 'curso';
+
+          const completado = cursos[curso.id];
+          const tienePrereqs = curso.prereqs && curso.prereqs.length > 0;
+          const prereqsCumplidos = tienePrereqs ? curso.prereqs.every(p => cursos[p]) : true;
+          const creditosMinOk = curso.creditosMin ? creditosActuales >= curso.creditosMin : true;
+
+          if (!completado && (!prereqsCumplidos || !creditosMinOk)) {
+            div.classList.add('bloqueado');
+          } else if (completado) {
+            div.classList.add('completado');
+          } else {
+            div.classList.add('pendiente');
+          }
+
+          div.innerHTML = `<strong>${curso.nombre}</strong><br><small>${curso.id} - ${curso.creditos} créditos</small>`;
+          if (!div.classList.contains('bloqueado')) {
+            div.onclick = () => {
+              cursos[curso.id] = !cursos[curso.id];
+              guardarYRenderizar();
+            };
+          }
+
+          divCiclo.appendChild(div);
+        });
+
+        contenedor.appendChild(divCiclo);
+      });
+    }
+
+    renderMalla();
+  </script>
+</body>
+</html>
